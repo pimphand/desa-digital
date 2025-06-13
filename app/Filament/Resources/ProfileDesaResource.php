@@ -15,7 +15,7 @@ class ProfileDesaResource extends Resource
 {
     protected static ?string $model = ProfileDesa::class;
     protected static ?string $navigationGroup = 'Desa';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-building-office';
 
     public static function form(Form $form): Form
     {
@@ -103,12 +103,12 @@ class ProfileDesaResource extends Resource
                                 Forms\Components\TextInput::make('batas_wilayah.batas_timur')
                                     ->label('Batas Timur')
                                     ->placeholder('Masukkan batas timur'),
-                                   Forms\Components\TextInput::make('lokasi.longitude')
-                                       ->label('Longitude')
-                                       ->placeholder('Masukkan longitude'),
-                                        Forms\Components\TextInput::make('lokasi.latitude')
-                                            ->label('Latitude')
-                                            ->placeholder('Masukkan latitude'),
+                                Forms\Components\TextInput::make('lokasi.longitude')
+                                    ->label('Longitude')
+                                    ->placeholder('Masukkan longitude'),
+                                Forms\Components\TextInput::make('lokasi.latitude')
+                                    ->label('Latitude')
+                                    ->placeholder('Masukkan latitude'),
                             ]),
                         Forms\Components\Tabs\Tab::make('Sejarah Desa')
                             ->schema([

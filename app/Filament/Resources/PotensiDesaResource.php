@@ -19,7 +19,7 @@ class PotensiDesaResource extends Resource
     protected static ?string $model = Potensi::class;
     protected static ?string $navigationGroup = 'Desa';
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-m-globe-europe-africa';
 
     public static function form(Form $form): Form
     {
