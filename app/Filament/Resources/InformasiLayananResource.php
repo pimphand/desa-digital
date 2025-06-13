@@ -31,10 +31,6 @@ class InformasiLayananResource extends Resource
                                 Forms\Components\TextInput::make('nama_layanan')
                                     ->required()
                                     ->label('Nama Layanan'),
-                                Forms\Components\TextInput::make('slug')
-                                    ->required()
-                                    ->unique(ignoreRecord: true)
-                                    ->label('Slug'),
                                 Forms\Components\Select::make('kategori')
                                     ->required()
                                     ->options([

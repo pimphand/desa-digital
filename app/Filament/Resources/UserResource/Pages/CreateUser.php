@@ -5,9 +5,16 @@ namespace App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
+use App\Traits\NotificationTrait;
 
 class CreateUser extends CreateRecord
 {
     protected static string $resource = UserResource::class;
     use \App\Traits\RedirectIndex;
+    use NotificationTrait;
+
+    protected function afterCreate(): void
+    {
+        $this->sendSuccessNotification();
+    }
 }

@@ -7,12 +7,13 @@ use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use App\Traits\NotificationTrait;
 
 class EditPengaduan extends EditRecord
 {
     protected static string $resource = PengaduanResource::class;
     use \App\Traits\RedirectIndex;
-
+    use NotificationTrait;
 
     protected function getHeaderActions(): array
     {
@@ -29,6 +30,11 @@ class EditPengaduan extends EditRecord
         }
 
         return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        $this->sendSuccessNotification();
     }
 
     protected function getRedirectUrl(): string

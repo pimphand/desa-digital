@@ -7,6 +7,7 @@ use App\Filament\Resources\BeritaResource\RelationManagers;
 use App\Models\Berita;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -39,7 +40,7 @@ class BeritaResource extends Resource
                     ->required()
                     ->label('Kategori Berita'),
                 Forms\Components\Hidden::make('penulis')
-                    ->default(fn () => Auth::user()->name),
+                    ->default(fn() => Auth::user()->name),
                 Forms\Components\FileUpload::make('gambar')
                     ->image()
                     ->mimeTypeMap(['image/jpeg' => 'jpg', 'image/png' => 'png'])
