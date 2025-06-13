@@ -109,7 +109,7 @@ class ProfileDesaResource extends Resource
                                 Forms\Components\TextInput::make('lokasi.latitude')
                                     ->label('Latitude')
                                     ->placeholder('Masukkan latitude'),
-                            ]),
+                            ])->columns(2),
                         Forms\Components\Tabs\Tab::make('Sejarah Desa')
                             ->schema([
                                 Forms\Components\RichEditor::make('sejarah_desa')
