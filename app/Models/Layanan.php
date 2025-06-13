@@ -3,15 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use \Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class Pengaduan extends Model
+class Layanan extends Model
 {
-    use HasUuids;
+    use \Illuminate\Database\Eloquent\Concerns\HasUuids;
     protected $guarded = [];
+
     protected $casts = [
-        'show_to_public' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+        'persyaratan' => 'array',
+        'prosedur' => 'array',
     ];
 }
