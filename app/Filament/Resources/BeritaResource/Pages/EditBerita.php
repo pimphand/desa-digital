@@ -9,6 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditBerita extends EditRecord
 {
     protected static string $resource = BeritaResource::class;
+    use \App\Traits\RedirectIndex;
 
     protected function getHeaderActions(): array
     {

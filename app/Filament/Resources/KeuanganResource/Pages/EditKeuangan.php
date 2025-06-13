@@ -9,6 +9,8 @@ use Filament\Resources\Pages\EditRecord;
 class EditKeuangan extends EditRecord
 {
     protected static string $resource = KeuanganResource::class;
+    use \App\Traits\RedirectIndex;
+
 
     protected function getHeaderActions(): array
     {

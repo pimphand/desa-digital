@@ -9,6 +9,7 @@ use Filament\Resources\Pages\EditRecord;
 class EditUser extends EditRecord
 {
     protected static string $resource = UserResource::class;
+    use \App\Traits\RedirectIndex;
 
     protected function getHeaderActions(): array
     {

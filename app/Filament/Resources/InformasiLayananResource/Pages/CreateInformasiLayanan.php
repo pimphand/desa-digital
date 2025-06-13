@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateInformasiLayanan extends CreateRecord
 {
     protected static string $resource = InformasiLayananResource::class;
+    use \App\Traits\RedirectIndex;
 }

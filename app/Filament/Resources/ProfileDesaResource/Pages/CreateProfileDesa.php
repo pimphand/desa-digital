@@ -9,6 +9,7 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateProfileDesa extends CreateRecord
 {
     protected static string $resource = ProfileDesaResource::class;
+    use \App\Traits\RedirectIndex;
 
     protected function getFormActions(): array
     {

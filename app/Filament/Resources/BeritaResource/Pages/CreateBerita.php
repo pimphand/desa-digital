@@ -9,4 +9,6 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateBerita extends CreateRecord
 {
     protected static string $resource = BeritaResource::class;
+
+    use \App\Traits\RedirectIndex;
 }

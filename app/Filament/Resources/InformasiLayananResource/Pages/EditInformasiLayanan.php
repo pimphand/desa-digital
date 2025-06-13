@@ -9,16 +9,12 @@ use Filament\Resources\Pages\EditRecord;
 class EditInformasiLayanan extends EditRecord
 {
     protected static string $resource = InformasiLayananResource::class;
+    use \App\Traits\RedirectIndex;
 
     protected function getHeaderActions(): array
     {
         return [
             Actions\DeleteAction::make(),
         ];
-    }
-
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index');
     }
 }

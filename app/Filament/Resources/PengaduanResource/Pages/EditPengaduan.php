@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 class EditPengaduan extends EditRecord
 {
     protected static string $resource = PengaduanResource::class;
+    use \App\Traits\RedirectIndex;
+
 
     protected function getHeaderActions(): array
     {

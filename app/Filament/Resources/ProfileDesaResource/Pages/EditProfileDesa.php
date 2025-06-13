@@ -9,8 +9,8 @@ use Filament\Resources\Pages\EditRecord;
 class EditProfileDesa extends EditRecord
 {
     protected static string $resource = ProfileDesaResource::class;
+    use \App\Traits\RedirectIndex;
 
-    //ambil data $first()
 
     protected function getHeaderActions(): array
     {

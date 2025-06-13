@@ -9,6 +9,8 @@ use Filament\Resources\Pages\EditRecord;
 class EditPotensiDesa extends EditRecord
 {
     protected static string $resource = PotensiDesaResource::class;
+    use \App\Traits\RedirectIndex;
+
 
     protected function getHeaderActions(): array
     {

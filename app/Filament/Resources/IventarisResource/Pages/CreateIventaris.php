@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateIventaris extends CreateRecord
 {
     protected static string $resource = IventarisResource::class;
+    use \App\Traits\RedirectIndex;
 }

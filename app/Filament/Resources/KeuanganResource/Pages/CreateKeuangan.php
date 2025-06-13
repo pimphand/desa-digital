@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreateKeuangan extends CreateRecord
 {
     protected static string $resource = KeuanganResource::class;
+    use \App\Traits\RedirectIndex;
 }

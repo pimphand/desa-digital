@@ -9,6 +9,8 @@ use Filament\Resources\Pages\EditRecord;
 class EditIventaris extends EditRecord
 {
     protected static string $resource = IventarisResource::class;
+    use \App\Traits\RedirectIndex;
+
 
     protected function getHeaderActions(): array
     {

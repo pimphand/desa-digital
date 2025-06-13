@@ -9,4 +9,5 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePotensiDesa extends CreateRecord
 {
     protected static string $resource = PotensiDesaResource::class;
+    use \App\Traits\RedirectIndex;
 }
