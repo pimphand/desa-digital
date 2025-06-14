@@ -25,7 +25,6 @@ class SKCKDocumentService
             $template = new TemplateProcessor($templatePath);
             Log::info('Template loaded successfully');
 
-            // Replace placeholders - GUNAKAN FORMAT ${variable} untuk template DOCX
             $placeholders = [
                 'nomor' => $record->no_surat ?? '',
                 'nama' => $record->nama ?? '',
@@ -45,18 +44,17 @@ class SKCKDocumentService
 
             // Set semua placeholder sekaligus untuk efisiensi
             Log::info('Setting placeholders: ' . json_encode($placeholders));
-            $template->setValues($placeholders);
 
-            // Alternative: Set satu per satu jika setValues() tidak bekerja
-            /*
-            foreach ($placeholders as $key => $value) {
-                Log::info("Setting placeholder {$key} with value: {$value}");
-                $template->setValue($key, $value);
+            // Coba setValues dulu, jika gagal gunakan setValue satu per satu
+            try {
+                $template->setValues($placeholders);
+            } catch (\Exception $e) {
+                Log::warning('setValues failed, falling back to individual setValue calls');
+                foreach ($placeholders as $key => $value) {
+                    Log::info("Setting placeholder {$key} with value: {$value}");
+                    $template->setValue($key, $value);
+                }
             }
-            */
-
-            // Cek dan hapus placeholder yang tidak terpakai
-            $template->setImageValue('foto', null); // Jika ada placeholder foto
 
             // Delete old file if exists
             if ($record->file_surat && Storage::disk('public')->exists($record->file_surat)) {
@@ -87,6 +85,8 @@ class SKCKDocumentService
             }
 
             Log::info('Saving document to: ' . $finalPath);
+
+            // Save the document
             $template->saveAs($finalPath);
 
             // Verify file was created and has content
@@ -99,6 +99,7 @@ class SKCKDocumentService
 
             if ($fileSize < 1000) { // File terlalu kecil, kemungkinan corrupt
                 Log::warning('Generated file size is suspiciously small: ' . $fileSize . ' bytes');
+                throw new \Exception('Generated file appears to be corrupt or empty');
             }
 
             // Update record with file path
