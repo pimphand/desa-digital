@@ -35,7 +35,7 @@ class SKCKDocumentService
                 'pekerjaan' => $record->pekerjaan ?? '',
                 'status' => $record->status_perkawinan ?? '',
                 'kewarganegaraan' => $record->kewarganegaraan ?? '',
-                'alamat' => $record->alamat ?? '',
+                'alamat' => $record->alamat . " " . $record->rt . '/' . $record->rw . ', ' . $record->dusun ?? '',
                 'keperluan' => $record->keperluan ?? '',
                 'nama_desa' => config('app.name') ?? '',
                 'tanggal' => now()->format('d F Y'),
@@ -52,7 +52,7 @@ class SKCKDocumentService
                 Log::warning('setValues failed, falling back to individual setValue calls');
                 foreach ($placeholders as $key => $value) {
                     Log::info("Setting placeholder {$key} with value: {$value}");
-                    $template->setValue($key, $value);
+                    $template->setValue($key, replace: $value);
                 }
             }
 
@@ -71,7 +71,7 @@ class SKCKDocumentService
 
             // Generate unique filename to avoid caching issues
             $timestamp = now()->format('YmdHis');
-            $filename = $record->id . '_' . $timestamp . '.docx';
+            $filename = $record->nama . '_' . $timestamp . '.docx';
             $filePath = 'surat/' . $filename;
             Log::info('Generated file path: ' . $filePath);
 
