@@ -25,28 +25,38 @@ class SKCKDocumentService
             $template = new TemplateProcessor($templatePath);
             Log::info('Template loaded successfully');
 
-            // Replace placeholders
+            // Replace placeholders - GUNAKAN FORMAT ${variable} untuk template DOCX
             $placeholders = [
-                'nomor' => $record->no_surat,
-                'nama' => $record->nama,
-                'nik' => $record->nik,
-                'ttl' => $record->tempat_lahir . ', ' . $record->tanggal_lahir,
-                'jenis_kelamin' => $record->jenis_kelamin,
-                'agama' => $record->agama,
-                'pekerjaan' => $record->pekerjaan,
-                'status' => $record->status_perkawinan,
-                'kewarganegaraan' => $record->kewarganegaraan,
-                'alamat' => $record->alamat,
-                'keperluan' => $record->keperluan,
-                'nama_desa' => config('app.name'),
+                'nomor' => $record->no_surat ?? '',
+                'nama' => $record->nama ?? '',
+                'nik' => $record->nik ?? '',
+                'ttl' => ($record->tempat_lahir ?? '') . ', ' . ($record->tanggal_lahir ?? ''),
+                'jenis_kelamin' => $record->jenis_kelamin ?? '',
+                'agama' => $record->agama ?? '',
+                'pekerjaan' => $record->pekerjaan ?? '',
+                'status' => $record->status_perkawinan ?? '',
+                'kewarganegaraan' => $record->kewarganegaraan ?? '',
+                'alamat' => $record->alamat ?? '',
+                'keperluan' => $record->keperluan ?? '',
+                'nama_desa' => config('app.name') ?? '',
                 'tanggal' => now()->format('d F Y'),
                 'nama_kepala_desa' => 'Nama Kepala Desa'
             ];
 
+            // Set semua placeholder sekaligus untuk efisiensi
+            Log::info('Setting placeholders: ' . json_encode($placeholders));
+            $template->setValues($placeholders);
+
+            // Alternative: Set satu per satu jika setValues() tidak bekerja
+            /*
             foreach ($placeholders as $key => $value) {
                 Log::info("Setting placeholder {$key} with value: {$value}");
                 $template->setValue($key, $value);
             }
+            */
+
+            // Cek dan hapus placeholder yang tidak terpakai
+            $template->setImageValue('foto', null); // Jika ada placeholder foto
 
             // Delete old file if exists
             if ($record->file_surat && Storage::disk('public')->exists($record->file_surat)) {
@@ -61,55 +71,67 @@ class SKCKDocumentService
                 Storage::disk('public')->makeDirectory($tempDir);
             }
 
-            // Generate filename based on record ID
-            $filename = $record->id . '.docx';
+            // Generate unique filename to avoid caching issues
+            $timestamp = now()->format('YmdHis');
+            $filename = $record->id . '_' . $timestamp . '.docx';
             $filePath = 'surat/' . $filename;
             Log::info('Generated file path: ' . $filePath);
 
-            // Save the modified template to a temporary file first
-            $tempFile = tempnam(sys_get_temp_dir(), 'skck_') . '.docx';
-            Log::info('Saving to temporary file: ' . $tempFile);
-            $template->saveAs($tempFile);
+            // Save directly to final destination
+            $finalPath = storage_path('app/public/' . $filePath);
 
-            // Verify temp file was created
-            if (!file_exists($tempFile)) {
-                throw new \Exception("Failed to create temporary file");
+            // Ensure directory exists
+            $finalDir = dirname($finalPath);
+            if (!is_dir($finalDir)) {
+                mkdir($finalDir, 0755, true);
             }
 
-            // Read the temporary file and save it using Storage::put
-            $fileContent = file_get_contents($tempFile);
-            if ($fileContent === false) {
-                throw new \Exception("Failed to read temporary file");
+            Log::info('Saving document to: ' . $finalPath);
+            $template->saveAs($finalPath);
+
+            // Verify file was created and has content
+            if (!file_exists($finalPath)) {
+                throw new \Exception("DOCX file was not created at: " . $finalPath);
             }
 
-            Log::info('Saving file to storage: ' . $filePath);
-            $saved = Storage::disk('public')->put($filePath, $fileContent);
-
-            // Clean up temporary file
-            if (file_exists($tempFile)) {
-                unlink($tempFile);
-                Log::info('Temporary file cleaned up');
-            }
-
-            if (!$saved) {
-                throw new \Exception("Failed to save DOCX file to storage using put method");
-            }
-
-            // Verify file exists and has content
-            if (!Storage::disk('public')->exists($filePath)) {
-                throw new \Exception("DOCX file was not saved successfully");
-            }
-
-            $fileSize = Storage::disk('public')->size($filePath);
+            $fileSize = filesize($finalPath);
             Log::info('File saved successfully. Size: ' . $fileSize . ' bytes');
+
+            if ($fileSize < 1000) { // File terlalu kecil, kemungkinan corrupt
+                Log::warning('Generated file size is suspiciously small: ' . $fileSize . ' bytes');
+            }
 
             // Update record with file path
             $record->update(['file_surat' => $filePath]);
-            Log::info('Record updated with new file path');
+            Log::info('Record updated with new file path: ' . $filePath);
+        } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
+            Log::error('PhpWord Error: ' . $e->getMessage());
+            Log::error('This might be due to template format or placeholder issues');
+            throw new \Exception('Template processing failed: ' . $e->getMessage());
         } catch (\Exception $e) {
             Log::error('SKCK Document Generation Error: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
             throw $e;
+        }
+    }
+
+    /**
+     * Debug method to check what placeholders exist in template
+     */
+    public function debugTemplate(): array
+    {
+        try {
+            $templatePath = storage_path('template/pengantar_skck.docx');
+            $template = new TemplateProcessor($templatePath);
+
+            // Get all variables from template
+            $variables = $template->getVariables();
+            Log::info('Template variables found: ' . json_encode($variables));
+
+            return $variables;
+        } catch (\Exception $e) {
+            Log::error('Debug template error: ' . $e->getMessage());
+            return [];
         }
     }
 }
