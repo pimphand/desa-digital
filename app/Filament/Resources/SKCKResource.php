@@ -162,7 +162,7 @@ class SKCKResource extends Resource
                     ->label('Lihat Surat')
                     ->icon('heroicon-o-document-arrow-down')
                     ->modalContent(fn(Skck $record) => view('filament.resources.skck-resource.pages.view-document', [
-                        'url' => asset('storage/' . $record->file_surat),
+                        'url' => 'https://docs.google.com/viewer?url=' . url('/storage/' . $record->file_surat) . '&embedded=true',
                     ]))
                     ->modalWidth('7xl')
             ])
