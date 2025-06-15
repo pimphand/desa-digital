@@ -30,7 +30,7 @@ class SKCKDocumentService
                 'nama' => $record->nama ?? '',
                 'nik' => $record->nik ?? '',
                 'ttl' => ($record->tempat_lahir ?? '') . ', ' . ($record->tanggal_lahir ?? ''),
-                'jenis_kelamin' => $record->jenis_kelamin ?? '',
+                'jenis_kelamin' => $record->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
                 'agama' => $record->agama ?? '',
                 'pekerjaan' => $record->pekerjaan ?? '',
                 'status' => $record->status_perkawinan ?? '',
@@ -70,8 +70,7 @@ class SKCKDocumentService
             }
 
             // Generate unique filename to avoid caching issues
-            $timestamp = now()->format('YmdHis');
-            $filename = $record->nama . '_' . $timestamp . '.docx';
+            $filename = str_replace(' ', '_', $record->nama) . '_' . '.docx';
             $filePath = 'surat/' . $filename;
             Log::info('Generated file path: ' . $filePath);
 
@@ -91,7 +90,7 @@ class SKCKDocumentService
 
             // Verify file was created and has content
             if (!file_exists($finalPath)) {
-                throw new \Exception("DOCX file was not created at: " . $finalPath);
+                throw new \Exception(message: "DOCX file was not created at: " . $finalPath);
             }
 
             $fileSize = filesize($finalPath);
@@ -104,6 +103,23 @@ class SKCKDocumentService
 
             // Update record with file path
             $record->update(['file_surat' => $filePath]);
+
+            //call node  convertToPdf.js $filePath str_replace('.docx', '.pdf', $filePath)
+            Log::info('Converting to PDF: ' . $finalPath);
+            $outputDir = storage_path('app/public/surat/pdf');
+            if (!is_dir($outputDir)) {
+                mkdir($outputDir, 0755, true);
+            }
+            $command = "node " . base_path('convertToPdf.js') . ' ' . $finalPath . ' ' . $outputDir . '/' . str_replace('.docx', '.pdf', $filePath);
+            // dd($command);
+            exec($command, $output, $returnVar);
+            if ($returnVar !== 0) {
+                Log::error('Node conversion command failed: ' . implode("\n", $output));
+                throw new \Exception('PDF conversion failed with command: ' . $command);
+            }
+            Log::info('PDF conversion completed successfully');
+            // Update record with PDF file path
+            $record->update(['file_surat' => str_replace('.docx', '.pdf', $filePath)]);
             Log::info('Record updated with new file path: ' . $filePath);
         } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
             Log::error('PhpWord Error: ' . $e->getMessage());

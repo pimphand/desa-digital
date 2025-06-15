@@ -19,6 +19,7 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Filament\Support\Enums\MaxWidth;
 
 class SKCKResource extends Resource
 {
@@ -158,13 +159,11 @@ class SKCKResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('download')
+                Tables\Actions\Action::make('url')
                     ->label('Lihat Surat')
                     ->icon('heroicon-o-document-arrow-down')
-                    ->modalContent(fn(Skck $record) => view('filament.resources.skck-resource.pages.view-document', [
-                        'url' => 'https://docs.google.com/viewer?url=' . url('/storage/' . $record->file_surat) . '&embedded=true',
-                    ]))
-                    ->modalWidth('7xl')
+                    ->url(fn($record) => url('/storage/' . str_replace('surat/', 'surat/pdf/surat/', $record->file_surat)))
+                    ->openUrlInNewTab()
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
