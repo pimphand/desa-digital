@@ -23,6 +23,7 @@ class SuratResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     protected static ?string $navigationGroup = 'Layanan Warga';
+    protected static ?string $navigationLabel = 'Surat';
 
     public function panel(Panel $panel): Panel
     {

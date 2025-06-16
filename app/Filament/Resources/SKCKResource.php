@@ -3,9 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SKCKResource\Pages;
-use App\Filament\Resources\SKCKResource\RelationManagers;
 use App\Models\Skck;
-use App\Services\SKCKDocumentService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -14,19 +12,14 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
-use PhpOffice\PhpWord\TemplateProcessor;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Filament\Support\Enums\MaxWidth;
 
 class SKCKResource extends Resource
 {
     protected static ?string $model = Skck::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    protected static ?string $navigationParentItem = "Surat";
+    protected static ?string $navigationGroup = 'Layanan Warga';
     public static function form(Form $form): Form
     {
         return $form
@@ -162,7 +155,7 @@ class SKCKResource extends Resource
                 Tables\Actions\Action::make('url')
                     ->label('Lihat Surat')
                     ->icon('heroicon-o-document-arrow-down')
-                    ->url(fn($record) => url('/storage/' . str_replace('surat/', 'surat/pdf/surat/', $record->file_surat)))
+                    ->url(fn($record) => asset('storage/' . $record->file_surat))
                     ->openUrlInNewTab()
             ])
             ->bulkActions([

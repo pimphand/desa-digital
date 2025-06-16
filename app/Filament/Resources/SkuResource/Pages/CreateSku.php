@@ -1,25 +1,25 @@
 <?php
 
-namespace App\Filament\Resources\SKCKResource\Pages;
+namespace App\Filament\Resources\SkuResource\Pages;
 
-use App\Filament\Resources\SKCKResource;
-use App\Services\SKCKDocumentService;
+use App\Filament\Resources\SkuResource;
+use App\Services\SKUDocumentService;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 
-class CreateSKCK extends CreateRecord
+class CreateSku extends CreateRecord
 {
-    protected static string $resource = SKCKResource::class;
+    protected static string $resource = SkuResource::class;
 
-    //after save
     use \App\Traits\RedirectIndex;
+
 
     protected function handleRecordCreation(array $data): Model
     {
         $record = static::getModel()::create($data);
         // Update the record with the provided data
-        $service = new SKCKDocumentService;
+        $service = new SKUDocumentService;
         $service->generateDocument($record);
         return $record;
     }

@@ -9,127 +9,89 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class SKCKDocumentService
+class SKCKDocumentService extends AbstractDocumentService
 {
-    public function generateDocument(Skck $record): void
+    protected function getTemplateName(): string
     {
-        try {
-            // Load the template
-            $templatePath = storage_path('template/pengantar_skck.docx');
-            Log::info('Loading template from: ' . $templatePath);
+        return 'pengantar_skck.docx';
+    }
 
-            if (!file_exists($templatePath)) {
-                throw new \Exception("Template file not found at: " . $templatePath);
-            }
+    protected function getFolderName(): string
+    {
+        return 'skck';
+    }
 
-            $template = new TemplateProcessor($templatePath);
-            Log::info('Template loaded successfully');
+    protected function getPlaceholders($record): array
+    {
+        return [
+            'nomor' => $record->no_surat ?? '',
+            'nama' => $record->nama ?? '',
+            'nik' => $record->nik ?? '',
+            'ttl' => ($record->tempat_lahir ?? '') . ', ' . ($record->tanggal_lahir ?? ''),
+            'jenis_kelamin' => $record->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
+            'agama' => $record->agama ?? '',
+            'pekerjaan' => $record->pekerjaan ?? '',
+            'status' => $record->status_perkawinan ?? '',
+            'kewarganegaraan' => $record->kewarganegaraan ?? '',
+            'alamat' => $record->alamat . " " . $record->rt . '/' . $record->rw . ', ' . $record->dusun ?? '',
+            'keperluan' => $record->keperluan ?? '',
+            'nama_desa' => config('app.name') ?? '',
+            'tanggal' => now()->format('d F Y'),
+            'nama_kepala_desa' => 'Nama Kepala Desa'
+        ];
+    }
 
-            $placeholders = [
-                'nomor' => $record->no_surat ?? '',
-                'nama' => $record->nama ?? '',
-                'nik' => $record->nik ?? '',
-                'ttl' => ($record->tempat_lahir ?? '') . ', ' . ($record->tanggal_lahir ?? ''),
-                'jenis_kelamin' => $record->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan',
-                'agama' => $record->agama ?? '',
-                'pekerjaan' => $record->pekerjaan ?? '',
-                'status' => $record->status_perkawinan ?? '',
-                'kewarganegaraan' => $record->kewarganegaraan ?? '',
-                'alamat' => $record->alamat . " " . $record->rt . '/' . $record->rw . ', ' . $record->dusun ?? '',
-                'keperluan' => $record->keperluan ?? '',
-                'nama_desa' => config('app.name') ?? '',
-                'tanggal' => now()->format('d F Y'),
-                'nama_kepala_desa' => 'Nama Kepala Desa'
-            ];
-
-            // Set semua placeholder sekaligus untuk efisiensi
-            Log::info('Setting placeholders: ' . json_encode($placeholders));
-
-            // Coba setValues dulu, jika gagal gunakan setValue satu per satu
-            try {
-                $template->setValues($placeholders);
-            } catch (\Exception $e) {
-                Log::warning('setValues failed, falling back to individual setValue calls');
-                foreach ($placeholders as $key => $value) {
-                    Log::info("Setting placeholder {$key} with value: {$value}");
-                    $template->setValue($key, replace: $value);
-                }
-            }
-
-            // Delete old file if exists
-            if ($record->file_surat && Storage::disk('public')->exists($record->file_surat)) {
-                Log::info('Deleting old file: ' . $record->file_surat);
-                Storage::disk('public')->delete($record->file_surat);
-            }
-
-            // Create temp directory if it doesn't exist
-            $tempDir = 'surat';
-            if (!Storage::disk('public')->exists($tempDir)) {
-                Log::info('Creating directory: ' . $tempDir);
-                Storage::disk('public')->makeDirectory($tempDir);
-            }
-
-            // Generate unique filename to avoid caching issues
-            $filename = str_replace(' ', '_', $record->nama) . '_' . '.docx';
-            $filePath = 'surat/' . $filename;
-            Log::info('Generated file path: ' . $filePath);
-
-            // Save directly to final destination
-            $finalPath = storage_path('app/public/' . $filePath);
-
-            // Ensure directory exists
-            $finalDir = dirname($finalPath);
-            if (!is_dir($finalDir)) {
-                mkdir($finalDir, 0755, true);
-            }
-
-            Log::info('Saving document to: ' . $finalPath);
-
-            // Save the document
-            $template->saveAs($finalPath);
-
-            // Verify file was created and has content
-            if (!file_exists($finalPath)) {
-                throw new \Exception(message: "DOCX file was not created at: " . $finalPath);
-            }
-
-            $fileSize = filesize($finalPath);
-            Log::info('File saved successfully. Size: ' . $fileSize . ' bytes');
-
-            if ($fileSize < 1000) { // File terlalu kecil, kemungkinan corrupt
-                Log::warning('Generated file size is suspiciously small: ' . $fileSize . ' bytes');
-                throw new \Exception('Generated file appears to be corrupt or empty');
-            }
-
-            // Update record with file path
-            $record->update(['file_surat' => $filePath]);
-
-            //call node  convertToPdf.js $filePath str_replace('.docx', '.pdf', $filePath)
-            Log::info('Converting to PDF: ' . $finalPath);
-            $outputDir = storage_path('app/public/surat/pdf');
-            if (!is_dir($outputDir)) {
-                mkdir($outputDir, 0755, true);
-            }
-            $command = "node " . base_path('convertToPdf.js') . ' ' . $finalPath . ' ' . $outputDir . '/' . str_replace('.docx', '.pdf', $filePath);
-            // dd($command);
-            exec($command, $output, $returnVar);
-            if ($returnVar !== 0) {
-                Log::error('Node conversion command failed: ' . implode("\n", $output));
-                throw new \Exception('PDF conversion failed with command: ' . $command);
-            }
-            Log::info('PDF conversion completed successfully');
-            // Update record with PDF file path
-            $record->update(['file_surat' => str_replace('.docx', '.pdf', $filePath)]);
-            Log::info('Record updated with new file path: ' . $filePath);
-        } catch (\PhpOffice\PhpWord\Exception\Exception $e) {
-            Log::error('PhpWord Error: ' . $e->getMessage());
-            Log::error('This might be due to template format or placeholder issues');
-            throw new \Exception('Template processing failed: ' . $e->getMessage());
-        } catch (\Exception $e) {
-            Log::error('SKCK Document Generation Error: ' . $e->getMessage());
-            Log::error('Stack trace: ' . $e->getTraceAsString());
-            throw $e;
+    protected function saveDocument(TemplateProcessor $template, string $filename): string
+    {
+        // Create temp directory if it doesn't exist
+        $tempDir = 'surat';
+        if (!Storage::disk('public')->exists($tempDir)) {
+            Log::info('Creating directory: ' . $tempDir);
+            Storage::disk('public')->makeDirectory($tempDir);
         }
+
+        $filePath = 'surat/' . $filename;
+        $finalPath = storage_path('app/public/' . $filePath);
+
+        // Ensure directory exists
+        $finalDir = dirname($finalPath);
+        if (!is_dir($finalDir)) {
+            mkdir($finalDir, 0755, true);
+        }
+
+        Log::info('Saving document to: ' . $finalPath);
+        $template->saveAs($finalPath);
+
+        // Verify file was created and has content
+        if (!file_exists($finalPath)) {
+            throw new \Exception("DOCX file was not created at: " . $finalPath);
+        }
+
+        $fileSize = filesize($finalPath);
+        Log::info('File saved successfully. Size: ' . $fileSize . ' bytes');
+
+        if ($fileSize < 1000) {
+            Log::warning('Generated file size is suspiciously small: ' . $fileSize . ' bytes');
+            throw new \Exception('Generated file appears to be corrupt or empty');
+        }
+
+        return $filePath;
+    }
+
+    public function generateDocument($record): void
+    {
+        if (!$record instanceof Skck) {
+            throw new \InvalidArgumentException('Record must be an instance of Skck');
+        }
+        parent::generateDocument($record);
+    }
+
+    protected function convertToPdf(string $filePath, $record, string $path): void
+    {
+        if (!$record instanceof Skck) {
+            throw new \InvalidArgumentException('Record must be an instance of Skck');
+        }
+        parent::convertToPdf($filePath, $record, $path);
     }
 
     /**
@@ -138,7 +100,7 @@ class SKCKDocumentService
     public function debugTemplate(): array
     {
         try {
-            $templatePath = storage_path('template/pengantar_skck.docx');
+            $templatePath = $this->getTemplatePath();
             $template = new TemplateProcessor($templatePath);
 
             // Get all variables from template
